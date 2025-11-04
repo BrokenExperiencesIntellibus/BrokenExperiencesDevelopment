@@ -384,7 +384,8 @@ export default function MapClient({ experiences }: MapClientProps) {
 		console.log('🗳️ Processing map cosign vote...');
 		voteOnExperience({
 			experienceId: experienceId,
-			vote: 'up' // Use 'up' for cosigning
+			vote: 'up', // Use 'up' for cosigning
+			currentUserVote: null // Assuming no previous vote when cosigning from map
 		});
 
 		// Reset debouncing after 1 second
@@ -1892,7 +1893,7 @@ export default function MapClient({ experiences }: MapClientProps) {
 								return 'Unknown date';
 							}
 						})()}
-						{selectedExperience.status === 'resolved' && (
+						{(selectedExperience.status === 'fixed' || selectedExperience.status === 'verified') && (
 							<span className="ml-2">
 								• Resolved
 							</span>

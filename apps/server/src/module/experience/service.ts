@@ -60,12 +60,12 @@ export const getExperiences = async (options: {
 	const userIds = [...new Set(experiences.map((exp) => exp.reportedBy))];
 	const users = await db.select().from(user).where(inArray(user.id, userIds));
 
-	// Get categories separately
-	const categoryIds = [...new Set(experiences.map((exp) => exp.categoryId))];
-	const categories = await db
+	// Get categories separately - filter out null values
+	const categoryIds = [...new Set(experiences.map((exp) => exp.categoryId).filter((id): id is string => id !== null))];
+	const categories = categoryIds.length > 0 ? await db
 		.select()
 		.from(category)
-		.where(inArray(category.id, categoryIds));
+		.where(inArray(category.id, categoryIds)) : [];
 
 	// Group by experience ID
 	const imagesByExperience = new Map();
@@ -84,7 +84,7 @@ export const getExperiences = async (options: {
 		...exp,
 		experienceImages: imagesByExperience.get(exp.id) || [],
 		reportedBy: usersById.get(exp.reportedBy) || null,
-		category: categoriesById.get(exp.categoryId) || null,
+		category: exp.categoryId ? categoriesById.get(exp.categoryId) || null : null,
 		userVote: null,
 	}));
 
