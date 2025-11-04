@@ -1,6 +1,5 @@
 import { db } from "@server/db";
 import { ACTIVITY_POINTS, activityPoints, user } from "@server/db/schema";
-import { increment } from "@server/db/utils";
 import { count, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { AwardPointsInput } from "./schema";
 
@@ -36,7 +35,7 @@ export class ScoringService {
 				await tx
 					.update(activityPoints)
 					.set({
-						totalPoints: increment(activityPoints.totalPoints, points), // Add points to existing total
+						totalPoints: sql`"totalPoints" + ${points}`, // Add points to existing total
 						...counterUpdate, // Increment the specific activity counter
 						updatedAt: new Date(),
 					})
@@ -75,16 +74,16 @@ export class ScoringService {
 	private static getCounterUpdateForActivity(activityType: string) {
 		switch (activityType) {
 			case "add_experience":
-				return { experiencesAdded: increment(activityPoints.experiencesAdded) };
+				return { experiencesAdded: sql`"experiencesAdded" + 1` };
 			case "fix_experience":
-				return { experiencesFixed: increment(activityPoints.experiencesFixed) };
+				return { experiencesFixed: sql`"experiencesFixed" + 1` };
 			case "verify_experience":
 				return {
-					experiencesVerified: increment(activityPoints.experiencesVerified),
+					experiencesVerified: sql`"experiencesVerified" + 1`,
 				};
 			case "sponsor_experience":
 				return {
-					experiencesSponsored: increment(activityPoints.experiencesSponsored),
+					experiencesSponsored: sql`"experiencesSponsored" + 1`,
 				};
 			default:
 				return {};

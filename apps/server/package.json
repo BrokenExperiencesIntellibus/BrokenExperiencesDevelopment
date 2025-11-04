@@ -33,6 +33,7 @@
 		"elysia": "^1.4.1",
 		"logixlysia": "^5.1.1",
 		"nodemailer": "^7.0.6",
+		"openai": "^6.8.0",
 		"pg": "^8.14.1",
 		"postgres": "^3.4.7",
 		"resend": "^6.1.2",

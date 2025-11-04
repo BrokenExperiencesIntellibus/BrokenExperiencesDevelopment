@@ -188,6 +188,47 @@ export const createExperience = async (options: {
 	try {
 		const { data } = options;
 
+		// Use AI to determine category if not provided, with fallback to "Other"
+		let categoryId = data.categoryId;
+		if (!categoryId) {
+			console.log("No category provided, attempting AI categorization...");
+			
+			// Check if OpenAI API key is configured
+			if (!process.env.OPENAI_API_KEY) {
+				console.warn("⚠️ OPENAI_API_KEY not configured, falling back to 'Other' category");
+				// Fallback to "Other" category
+				const otherCategory = await db.select({ id: category.id }).from(category).where(eq(category.name, 'Other')).limit(1);
+				categoryId = otherCategory[0]?.id;
+				
+				if (!categoryId) {
+					throw new Error("Default 'Other' category not found in database");
+				}
+				console.log("✅ Assigned default 'Other' category");
+			} else {
+				try {
+					console.log("🤖 Using AI to determine category...");
+					const { AICategorization } = await import('@server/module/ai-categorization/service');
+					categoryId = await AICategorization.categorizeAndGetId({
+						title: data.title,
+						description: data.description,
+						address: data.address,
+						imageUrls: data.imageUrls,
+					});
+					console.log(`✅ AI determined category ID: ${categoryId}`);
+				} catch (error) {
+					console.warn("⚠️ AI categorization failed, falling back to 'Other' category:", error);
+					// Fallback to "Other" category instead of failing
+					const otherCategory = await db.select({ id: category.id }).from(category).where(eq(category.name, 'Other')).limit(1);
+					categoryId = otherCategory[0]?.id;
+					
+					if (!categoryId) {
+						throw new Error("AI failed and default 'Other' category not found in database");
+					}
+					console.log("✅ Assigned fallback 'Other' category");
+				}
+			}
+		}
+
 		const createdExperience = await db.transaction(async (tx) => {
 			// Ensure user exists in the database and update their info if needed
 			const existingUser = await tx.query.user.findFirst({
@@ -234,10 +275,10 @@ export const createExperience = async (options: {
 					title: data.title,
 					reportedBy: options.userId,
 					description: data.description,
-					latitude: String(data.latitude),
-					longitude: String(data.longitude),
+					latitude: data.latitude,
+					longitude: data.longitude,
 					address: data.address,
-					categoryId: data.categoryId,
+					categoryId: categoryId,
 					status: data.status || "pending",
 					priority: data.priority || "medium",
 				})

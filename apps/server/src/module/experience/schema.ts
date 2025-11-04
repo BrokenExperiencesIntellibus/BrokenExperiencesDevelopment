@@ -44,7 +44,7 @@ export const experienceCreateSchema = t.Object({
 	latitude: latitudeSchema,
 	longitude: longitudeSchema,
 	address: t.String({ minLength: 5, maxLength: 100 }),
-	categoryId: t.String({ format: "uuid" }),
+	categoryId: t.Optional(t.String({ format: "uuid" })),
 	status: t.Optional(
 		t.Enum(ExperienceStatusEnum, {
 			default: ExperienceStatusEnum.pending,

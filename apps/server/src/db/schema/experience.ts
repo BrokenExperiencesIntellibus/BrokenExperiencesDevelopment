@@ -35,8 +35,7 @@ export const experience = p.pgTable(
 			.notNull(),
 		categoryId: p
 			.uuid()
-			.references(() => category.id, { onDelete: "cascade" })
-			.notNull(),
+			.references(() => category.id, { onDelete: "cascade" }),
 		title: p.text().notNull(),
 		description: p.text().notNull(),
 		latitude: p.decimal().notNull(),

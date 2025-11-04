@@ -6,7 +6,7 @@ import { z } from "zod";
 export const createExperienceAction = actionClient
 	.inputSchema(
 		z.object({
-			categoryId: z.string(),
+			categoryId: z.string().optional(),
 			title: z.string().optional(),
 			description: z.string().min(1, "Please describe your experience"),
 			latitude: z.string(),
@@ -60,7 +60,7 @@ export const createExperienceAction = actionClient
 					: "Experience Report";
 
 		const payload = {
-			categoryId: parsedInput.categoryId,
+			...(parsedInput.categoryId && { categoryId: parsedInput.categoryId }),
 			title: title,
 			description: parsedInput.description,
 			latitude: parsedInput.latitude,

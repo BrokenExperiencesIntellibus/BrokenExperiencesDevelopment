@@ -86,16 +86,9 @@ export default function CreateExperienceCard({
 						const lat = position.coords.latitude.toString();
 						const lng = position.coords.longitude.toString();
 
-						// Get address from coordinates using OpenStreetMap Nominatim for street-level precision
-						fetch(
-							`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-							{
-								headers: {
-									"User-Agent":
-										"BrokenExperiences/1.0 (https://brokenexperiences.com)",
-								},
-							},
-						)
+						// Get address from coordinates using server-side geocoding proxy
+						const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+						fetch(`${serverUrl}/geocoding/reverse?lat=${lat}&lng=${lng}`)
 							.then((response) => response.json())
 							.then((data) => {
 								console.log(
@@ -217,16 +210,9 @@ export default function CreateExperienceCard({
 
 					console.log("📍 Got location:", { lat, lng });
 
-					// Get address from coordinates using OpenStreetMap Nominatim for street-level precision
-					fetch(
-						`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-						{
-							headers: {
-								"User-Agent":
-									"BrokenExperiences/1.0 (https://brokenexperiences.com)",
-							},
-						},
-					)
+					// Get address from coordinates using server-side geocoding proxy
+					const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+					fetch(`${serverUrl}/geocoding/reverse?lat=${lat}&lng=${lng}`)
 						.then((response) => response.json())
 						.then((data) => {
 							console.log(
@@ -386,7 +372,6 @@ export default function CreateExperienceCard({
 	const form = useForm({
 		defaultValues: {
 			description: "",
-			categoryId: "",
 			priority: "medium",
 			status: "pending",
 		},
@@ -415,7 +400,7 @@ export default function CreateExperienceCard({
 			}
 
 			const submission = {
-				categoryId: value.categoryId,
+				// No categoryId - AI will determine this automatically
 				title: value.description.substring(0, 50),
 				description: value.description,
 				priority: value.priority || "medium",
@@ -449,7 +434,6 @@ export default function CreateExperienceCard({
 		validators: {
 			onSubmit: z.object({
 				description: z.string().min(5, "Please provide at least 5 characters"),
-				categoryId: z.string().min(1, "Category is required"),
 				priority: z.string(),
 				status: z.string(),
 			}),
@@ -693,36 +677,54 @@ export default function CreateExperienceCard({
 							)}
 						</div>
 
-						{/* Category selector - always on right side on mobile */}
+						{/* AI Auto-categorization indicator */}
+						<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 border border-blue-200">
+							<div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+							<span className="text-blue-700 text-xs font-medium">Smart Auto-Category</span>
+						</div>
+
+						{/* Category selector - COMMENTED OUT - AI handles this automatically now */}
+						{/* 
 						<form.Field name="categoryId">
 							{(field) => (
 								<>
-									<Select
-										value={field.state.value}
-										onValueChange={field.handleChange}
-									>
-										<SelectTrigger className="h-8 w-[90px] flex-shrink-0 border-gray-200 bg-white text-gray-700 text-xs sm:w-[100px]">
-											<SelectValue placeholder="Category" />
-										</SelectTrigger>
-										<SelectContent>
-											{Array.isArray(categoryOptions) &&
-												categoryOptions.map((category) => (
-													<SelectItem key={category.id} value={category.id}>
-														{category.name}
-													</SelectItem>
-												))}
-										</SelectContent>
-									</Select>
+									<Tooltip>
+										<TooltipTrigger
+											render={
+												<Select
+													value={field.state.value || ""}
+													onValueChange={field.handleChange}
+												>
+													<SelectTrigger className="h-8 w-[90px] flex-shrink-0 border-gray-200 bg-white text-gray-700 text-xs sm:w-[120px]">
+														<SelectValue placeholder="AI Auto" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="">
+															<span className="text-green-600 font-medium">AI Auto-Detect</span>
+														</SelectItem>
+														{Array.isArray(categoryOptions) &&
+															categoryOptions.map((category) => (
+																<SelectItem key={category.id} value={category.id}>
+																	{category.name}
+																</SelectItem>
+															))}
+													</SelectContent>
+												</Select>
+											}
+										/>
+										<TooltipPanel>
+											AI will automatically detect the best category for your issue. You can override by selecting manually.
+										</TooltipPanel>
+									</Tooltip>
 									{field.state.meta.errors.length > 0 && (
 										<p className="mt-1 text-red-500 text-xs">
-											{typeof field.state.meta.errors[0] === "string"
-												? field.state.meta.errors[0]
-												: field.state.meta.errors[0]?.message || "Error"}
+											{String(field.state.meta.errors[0]) || "Error"}
 										</p>
 									)}
 								</>
 							)}
 						</form.Field>
+						*/}
 					</div>
 
 					{/* Bottom row on mobile: Action buttons */}
@@ -747,7 +749,8 @@ export default function CreateExperienceCard({
 										isExecuting ||
 										!location ||
 										!location.latitude ||
-										!location.longitude
+										!location.longitude ||
+										state.values.description.trim().length < 5
 									}
 								>
 									{state.isSubmitting || isExecuting ? "Posting..." : "Post"}

@@ -29,13 +29,12 @@ export function ExperienceForm({
 	const form = useForm({
 		defaultValues: {
 			description: "",
-			categories: ["Security", "Transportation", "Public space"],
 		},
 		onSubmit: async ({ value }) => {
 			onSubmit({
 				description: value.description,
 				photos,
-				categories: value.categories,
+				categories: [], // AI will determine categories automatically
 				location,
 			});
 		},
@@ -121,26 +120,15 @@ export function ExperienceForm({
 						/>
 					</div>
 
-					{/* Categories */}
+					{/* AI Auto-categorization */}
 					<div>
 						<h3 className="mb-2 font-medium text-gray-700 text-sm">
-							Categories
+							Category
 						</h3>
-						<form.Field
-							name="categories"
-							children={(field) => (
-								<div className="flex flex-wrap gap-2">
-									{field.state.value.map((category) => (
-										<span
-											key={category}
-											className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700 text-sm"
-										>
-											{category}
-										</span>
-									))}
-								</div>
-							)}
-						/>
+						<div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+							<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+							<span className="text-green-700 text-sm font-medium">AI will automatically categorize your report</span>
+						</div>
 					</div>
 				</div>
 
