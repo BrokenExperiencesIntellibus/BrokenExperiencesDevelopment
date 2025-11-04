@@ -678,9 +678,9 @@ export default function CreateExperienceCard({
 						</div>
 
 						{/* AI Auto-categorization indicator */}
-						<div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 border border-blue-200">
-							<div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-							<span className="text-blue-700 text-xs font-medium">Smart Auto-Category</span>
+						<div className="flex items-center gap-1.5 whitespace-nowrap">
+							<div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
+							<span className="text-blue-600 text-xs font-medium">Smart Auto-Category</span>
 						</div>
 
 						{/* Category selector - COMMENTED OUT - AI handles this automatically now */}
@@ -728,34 +728,57 @@ export default function CreateExperienceCard({
 					</div>
 
 					{/* Bottom row on mobile: Action buttons */}
-					<div className="mt-2 flex items-center justify-end gap-2 sm:mt-0">
-						{isExpanded && (
-							<Button
-								type="button"
-								onClick={handleCancel}
-								className="rounded-full bg-gray-100 px-4 py-2 font-medium text-gray-700 text-sm hover:bg-gray-200"
-							>
-								Cancel
-							</Button>
-						)}
+					<div className="mt-2 flex flex-col items-end gap-2 sm:mt-0 sm:flex-row sm:items-center">
 						<form.Subscribe>
-							{(state) => (
-								<Button
-									type="submit"
-									className="rounded-full bg-black px-6 py-2 font-medium text-sm text-white hover:bg-gray-800 disabled:opacity-50"
-									disabled={
-										!state.canSubmit ||
-										state.isSubmitting ||
-										isExecuting ||
-										!location ||
-										!location.latitude ||
-										!location.longitude ||
-										state.values.description.trim().length < 5
-									}
-								>
-									{state.isSubmitting || isExecuting ? "Posting..." : "Post"}
-								</Button>
-							)}
+							{(state) => {
+								const isDisabled = !state.canSubmit ||
+									state.isSubmitting ||
+									isExecuting ||
+									!location ||
+									!location.latitude ||
+									!location.longitude ||
+									state.values.description.trim().length < 5;
+								
+								const characterCount = state.values.description.trim().length;
+								const needsMoreChars = characterCount < 5;
+								const needsLocation = !location || !location.latitude || !location.longitude;
+								
+								return (
+									<div className="flex flex-col items-end gap-1">
+										{/* Validation message */}
+										{isExpanded && isDisabled && !state.isSubmitting && !isExecuting && (
+											<div className="text-xs text-gray-500">
+												{needsMoreChars && (
+													<span>Need {5 - characterCount} more character{5 - characterCount === 1 ? '' : 's'}</span>
+												)}
+												{!needsMoreChars && needsLocation && (
+													<span>Location required to post</span>
+												)}
+											</div>
+										)}
+										
+										{/* Buttons */}
+										<div className="flex items-center gap-2">
+											{isExpanded && (
+												<Button
+													type="button"
+													onClick={handleCancel}
+													className="rounded-full bg-gray-100 px-4 py-2 font-medium text-gray-700 text-sm hover:bg-gray-200"
+												>
+													Cancel
+												</Button>
+											)}
+											<Button
+												type="submit"
+												className="rounded-full bg-black px-6 py-2 font-medium text-sm text-white hover:bg-gray-800 disabled:opacity-50"
+												disabled={isDisabled}
+											>
+												{state.isSubmitting || isExecuting ? "Posting..." : "Post"}
+											</Button>
+										</div>
+									</div>
+								);
+							}}
 						</form.Subscribe>
 					</div>
 				</div>
